@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -30,13 +29,12 @@ import com.mbientlab.metawear.data.AngularVelocity;
 import com.mbientlab.metawear.module.Accelerometer;
 import com.mbientlab.metawear.module.GyroBmi160;
 
-import java.util.List;
-import java.util.Set;
+
 
 import bolts.Continuation;
 import bolts.Task;
 
-import static android.bluetooth.BluetoothProfile.GATT;
+
 
 
 public class MainActivity extends AppCompatActivity implements ServiceConnection {
@@ -88,6 +86,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         serviceBinder = (BtleService.LocalBinder) service;
         retrieveBoard();
 
+        // connectAsync().onSuccessTask seems to be shorthand for creating a class that extends AsyncTask
+        // Useful AsyncTask resource: https://www.cs.dartmouth.edu/~campbell/cs65/lecture20/lecture20.html
+
         // Accelerometer
         // ---------------------------------------------------------------------------------------------
         board.connectAsync().onSuccessTask(new Continuation<Void, Task<Route>>() {
@@ -98,13 +99,15 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 accelerometer.configure()
                         .odr(25f)       // Set sampling frequency to 25Hz, or closest valid ODR
                         .commit();
+
+                // Adds a Stream route to access the accelerometer module features
                 return accelerometer.acceleration().addRouteAsync(new RouteBuilder() {
                     @Override
                     public void configure(RouteComponent source) {
                         source.stream(new Subscriber() {
                             @Override
                             public void apply(Data data, Object... env) {
-                                // do something
+                                // When data is received update the accelerator text field
                                 textView.setText(data.value(Acceleration.class).toString());
                             }
                         });
@@ -115,13 +118,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             @Override
             public Void then(Task<Route> task) throws Exception {
                 if(task.isFaulted()){
-                    // didn't work
+                    // Task Failed
                 } else {
-                    // worked
+                    // Task Worked
                 }
                 return null;
             }
         });
+
 
 
         // Gyro
@@ -135,12 +139,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                         .range(GyroBmi160.Range.FSR_2000)
                         .commit();
 
+                // Adds a Stream route to access the gyro module features
                 return gyroBmi160.angularVelocity().addRouteAsync(new RouteBuilder() {
                     @Override
                     public void configure(RouteComponent source) {
                         source.stream(new Subscriber() {
                             @Override
                             public void apply(Data data, Object ... env) {
+                                // When data is received update the gyro text field
                                 gyroView.setText(data.value(AngularVelocity.class).toString());
                             }
                         });
@@ -148,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 }).continueWith(new Continuation<Route, Void>() {
                     @Override
                     public Void then(Task<Route> task) throws Exception {
-
+                        // Once the task is completed continue by setting the action listeners
                         setButtonListeners();
                         return null;
                     }

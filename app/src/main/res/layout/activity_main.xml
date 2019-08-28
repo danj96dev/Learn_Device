@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:backgroundTint="#0DB9B9B9"
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".MainActivity">
@@ -17,7 +18,7 @@
     <TextView
         android:id="@+id/gyro"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="100dp"
         android:textSize="24sp" />
 
     <Button
